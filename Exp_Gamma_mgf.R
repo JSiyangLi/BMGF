@@ -117,3 +117,95 @@ marginal_likelihood <- function(y, t, alpha, lambda) {
 
 # verification using compound gamma
 round(dmultiexpgamma(y, alpha, lambda), 18) == round(m, 18)
+
+#############################
+##############
+# example 4: cake baking
+##############
+# design matrices
+Xbold_mat <- cbind(matrix(rep(175 + 10*(0:5), each = 45), ncol = 6))
+Xbold <- c(Xbold_mat)
+rbold <- cbind(c(rep(1, 15), rep(0, 30)),
+               c(rep(0, 15), rep(1, 15), rep(0, 15)),
+               c(rep(0, 30), rep(1, 15)))
+# responses
+ybold_mat <- 
+  rbind(c(42, 46, 47, 39, 53, 42), # recipe 1
+        c(47, 29, 35, 47, 57, 45),
+        c(32, 32, 37, 43, 45, 45),
+        c(26, 32, 35, 24, 39, 26),
+        c(28, 30, 31, 37, 41, 47),
+        c(24, 22, 22, 29, 35, 26),
+        c(26, 23, 25, 27, 33, 35),
+        c(24, 33, 23, 32, 31, 34),
+        c(24, 27, 28, 33, 34, 23),
+        c(24, 33, 27, 31, 30, 33),
+        c(33, 39, 33, 28, 33, 30),
+        c(28, 31, 27, 39, 35, 43),
+        c(29, 28, 31, 29, 37, 33),
+        c(24, 40, 29, 40, 40, 31),
+        c(26, 28, 32, 25, 37, 33),
+        c(39, 46, 51, 49, 55, 42), # recipe 2
+        c(35, 46, 47, 39, 52, 61),
+        c(34, 30, 42, 35, 42, 35),
+        c(25, 26, 28, 46, 37, 37),
+        c(31, 30, 29, 35, 40, 36),
+        c(24, 29, 29, 29, 24, 35),
+        c(22, 25, 26, 26, 29, 36),
+        c(26, 23, 24, 31, 27, 37),
+        c(27, 26, 32, 28, 32, 33),
+        c(21, 24, 24, 27, 37, 30),
+        c(20, 27, 33, 31, 28, 33),
+        c(23, 28, 31, 34, 31, 29),
+        c(32, 35, 30, 27, 35, 30),
+        c(23, 25, 22, 19, 21, 35),
+        c(21, 21, 28, 26, 27, 20),
+        c(46, 44, 45, 46, 48, 63), # recipe 3
+        c(43, 43, 43, 46, 47, 58),
+        c(33, 24, 40, 37, 41, 38),
+        c(38, 41, 38, 30, 36, 35),
+        c(21, 25, 31, 35, 33, 23),
+        c(24, 33, 30, 30, 37, 35),
+        c(20, 21, 31, 24, 30, 33),
+        c(24, 23, 21, 24, 21, 35),
+        c(24, 18, 21, 26, 28, 28),
+        c(26, 28, 27, 27, 35, 35),
+        c(28, 25, 26, 25, 38, 28), 
+        c(24, 30, 28, 35, 33, 28),
+        c(28, 29, 43, 28, 33, 37),
+        c(19, 22, 27, 25, 25, 35),
+        c(21, 28, 25, 25, 31, 25))
+ybold <- c(ybold_mat)
+df <- data.frame(cbind(ybold, Xbold, rep(1:3, each = 15)))
+df[, 4] <- (df[, 3] == 2) * df[, 2]
+df[, 5] <- (df[, 3] == 3) * df[, 2]
+colnames(df) <- c("angle", "temperature", "recipe", "recipe_2_interact", "recipe_3_interact")
+designXbold <- df[, c(2, 4, 5)]
+
+# plotting the observations
+library(ggplot2)
+ggplot(data = df, mapping = aes(x = temperature, y = angle, colour = as.character(recipe), shape = as.character(recipe))) +
+  geom_point() +
+  scale_colour_discrete(name = "recipe", labels = c("I", "II", "III")) +
+  scale_shape_discrete(name = "recipe", labels = c("I", "II", "III")) +
+  labs(title = "Breaking angles of cakes vs. recipes and temperatures",
+       x = "baking temperatures (degree celcius)",
+       y = "cake breaking angle (degree)")
+
+# marginal likelihoods
+log_marginal_likelihood <- function(abold, xi, alpha, ybold, rbold, Xbold) {
+  m <- nrow(ybold)
+  n <- ncol(rbold)
+  log_bzeta <- -Xbold %*% abold
+  log_front <- m * alpha * log(alpha) - m * lgamma(alpha) + (alpha - 1) * sum(log(ybold)) + alpha * sum(log_bzeta) +
+    n * lgamma(m * alpha / n + xi + 1) - n * lgamma(xi + 1)
+  log_mgf_fraction <- (xi + 1) * log(xi) - (m*alpha/n + xi + 1) * log(xi + alpha * ybold * rep(exp(log_bzeta)) %*% rbold)
+  log_front + sum(log_mgf_fraction)
+}
+
+
+
+# maximum marginal likelihood estimates for fixed effects
+optim(par = rep(0, 6), 
+      fn = function(abold) -log_marginal_likelihood(abold, xi = 219.1, alpha = 52, ybold = ybold, rbold = rbold, Xbold = designXbold),
+      hessian = TRUE)
