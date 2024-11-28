@@ -317,7 +317,7 @@ lee_confint <- s$FixCoefMat[, 1] + cbind(qnorm(0.025) * s$FixCoefMat[, 2], qnorm
 # are all the estimates from maximum hglm and maximum mgf-marginal likelihood consistent?
 sapply(1:length(s$FixCoefMat[, 1]), function(j) lee_confint[j, 1] <= mmle$par[j] & mmle$par[j] <= lee_confint[j, 2])
 # likelihood-ratio test for the two models
-lrt(lee_fit, noint_fit)
+#lrt(lee_fit, noint_fit)
 
 # graph with fitted values
 lee_recipe_1_fitted <- c(s$FixCoefMat[1, 1], s$FixCoefMat[1, 1] + s$FixCoefMat[4:8, 1])
@@ -358,7 +358,7 @@ cox_fit <-
 logLik(cox_fit) 
 plot(cox_fit)
 # likelihood-ratio test for the two models
-lrt(cox_fit, noint_fit)
+#lrt(cox_fit, noint_fit)
 
 # maximum marginal likelihood estimates for fixed effects
 coxXbold <- model.matrix(angle ~ factor(recipe) * factor(temperature) + factor(replication), data = df1)
