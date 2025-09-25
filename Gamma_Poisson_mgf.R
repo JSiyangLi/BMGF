@@ -227,10 +227,10 @@ region_rates <- matrix(rgamma(3 * iterations, shape = alpha, rate = Beta), nrow 
 region_obs <- matrix(rpois(5 * iterations, lambda = t(A %*% region_rates)), ncol = 5)
 colMeans(region_obs) # should be around (0.225, 2.25, 0.225, 2.025, 2.025)
 region_y <- subset(region_obs, region_obs[, 1] == y[1] & region_obs[, 2] == y[2] & region_obs[, 3] == y[3] & region_obs[, 4] == y[4] & region_obs[, 5] == y[5])
-nrow(region_y)
-nrow(region_y) / iterations
-(freqq <- qbinom(c(0.025, 0.975), size = iterations, prob = m))
-nrow(region_y) >= freqq[1] & nrow(region_y) <= freqq[2]
+nrow(region_y) # number of times the observed Y happen
+nrow(region_y) / iterations # frequency the observed Y happens
+(freqq <- qbinom(c(0.025, 0.975), size = iterations, prob = m)) # theoratical exact confidence interval
+nrow(region_y) >= freqq[1] & nrow(region_y) <= freqq[2] # the frequency Y happens is within the CI
 #####################################
 ############
 # example 5: pump failure hierarchical model marginalisation
@@ -254,7 +254,7 @@ round(p, 29) == round(m, 29) # TRUE
 
 ##################################
 ###########
-# example 6: Pareto pump failure marginal likelihood
+# example 6: Pareto pump failure marginal likelihood (analytical)
 ###########
 sum(y)
 sum(ti)
